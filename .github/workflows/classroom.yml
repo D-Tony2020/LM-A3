@@ -1,0 +1,94 @@
+name: Autograding Tests
+
+on:
+  push:
+  workflow_dispatch:
+  repository_dispatch:
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install uv and dependencies
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+          uv sync
+
+      - name: Warm tokenizer and NLTK cache
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv run python -c "import nltk; nltk.download('punkt', quiet=True); from transformers import T5TokenizerFast; T5TokenizerFast.from_pretrained('google-t5/t5-small')"
+
+      - name: test_decoder_bos
+        id: test-decoder-bos
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: test_decoder_bos
+          command: uv run pytest tests/test_loaddata.py::test_collate_fn_decoder_bos -x
+          timeout: 60
+          max-score: 2
+
+      - name: test_encoder_inputs_shape
+        id: test-encoder-inputs-shape
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: test_encoder_inputs_shape
+          command: uv run pytest tests/test_loaddata.py::test_collate_fn_encoder_inputs_shape -x
+          timeout: 60
+          max-score: 2
+
+      - name: test_decoder_inputs
+        id: test-decoder-inputs
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: test_decoder_inputs
+          command: uv run pytest tests/test_loaddata.py::test_collate_fn_decoder_inputs -x
+          timeout: 60
+          max-score: 2
+
+      - name: test_decoder_targets
+        id: test-decoder-targets
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: test_decoder_targets
+          command: uv run pytest tests/test_loaddata.py::test_collate_fn_decoder_targets -x
+          timeout: 60
+          max-score: 2
+
+      - name: test_initial_decoder_inputs
+        id: test-initial-decoder-inputs
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: test_initial_decoder_inputs
+          command: uv run pytest tests/test_loaddata.py::test_collate_fn_decoder_initial_decoder_inputs -x
+          timeout: 60
+          max-score: 2
+
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          TEST-DECODER-BOS_RESULTS: "${{ steps.test-decoder-bos.outputs.result }}"
+          TEST-ENCODER-INPUTS-SHAPE_RESULTS: "${{ steps.test-encoder-inputs-shape.outputs.result }}"
+          TEST-DECODER-INPUTS_RESULTS: "${{ steps.test-decoder-inputs.outputs.result }}"
+          TEST-DECODER-TARGETS_RESULTS: "${{ steps.test-decoder-targets.outputs.result }}"
+          TEST-INITIAL-DECODER-INPUTS_RESULTS: "${{ steps.test-initial-decoder-inputs.outputs.result }}"
+        with:
+          runners: test-decoder-bos,test-encoder-inputs-shape,test-decoder-inputs,test-decoder-targets,test-initial-decoder-inputs
