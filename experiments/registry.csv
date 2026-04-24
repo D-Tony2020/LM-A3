@@ -1,0 +1,1 @@
+timestamp,run_id,model_type,experiment_name,config_hash,dev_record_f1,dev_record_em,dev_sql_em,dev_error_rate,dev_loss,test_record_f1,best_hyperparam,duration_sec,epochs_trained,config_json

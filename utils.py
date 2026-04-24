@@ -68,7 +68,7 @@ def save_queries_and_records(sql_queries: List[str], sql_path: str, record_path:
         * record_path (str): Path to save database records associated with queries
     '''
     # First save the queries
-    with open(sql_path, 'w') as f:
+    with open(sql_path, 'w', encoding='utf-8') as f:
         for query in sql_queries:
             f.write(f'{query}\n')
 
@@ -78,7 +78,7 @@ def save_queries_and_records(sql_queries: List[str], sql_path: str, record_path:
         pickle.dump((records, error_msgs), f)
 
 def read_queries(sql_path: str):
-    with open(sql_path, 'r') as f:
+    with open(sql_path, 'r', encoding='utf-8') as f:
         qs = [q.strip() for q in f.readlines()]
     return qs
 

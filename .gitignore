@@ -1,0 +1,40 @@
+# Virtual envs / caches
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Large model artefacts — recoverable from training; do NOT push to GitHub
+experiments/checkpoints/
+experiments/colab_output/
+*.pth
+*.pt
+*.bin
+*.safetensors
+
+# Long raw training logs (the per-run JSON in experiments/runs/ is what gets committed)
+experiments/agent_log/run_*.log
+
+# Scratch directories used during evaluation
+results/_tmp/
+
+# Spec PDF — distribution is restricted by the course (CC BY-NC, instructor only)
+INFO/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local env / wandb
+.env
+wandb/
