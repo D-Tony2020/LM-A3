@@ -70,14 +70,19 @@ T5_CONFIGS = {
         'experiment_name': 't5_ft_long',
     },
 
-    # Finetune with frozen encoder. Ablation target for the report.
+    # Finetune with frozen encoder (Task 1 ablation — supports the
+    # "freezing parameters" question in the report). Local-GPU safe:
+    # fp32 + gradient checkpointing + bs=4 ga=4. LR is higher than the
+    # baseline because only the decoder receives updates.
     't5_ft_frozen_encoder': {
         'model_type': 't5_ft', 'finetune': True,
-        'lr': 1e-3, 'weight_decay': 0.01,
-        'max_epochs': 15, 'patience': 4, 'warmup_steps': 500,
+        'lr': 5e-4, 'weight_decay': 0.01,
+        'max_epochs': 12, 'patience': 4, 'warmup_steps': 500,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
-        'grad_accumulation_steps': 2, 'use_amp': True,
-        'batch_size': 8, 'test_batch_size': 16,
+        'label_smoothing': 0.1,
+        'grad_accumulation_steps': 4, 'use_amp': False,
+        'gradient_checkpointing': True,
+        'batch_size': 4, 'test_batch_size': 8,
         'max_new_tokens': 256, 'num_beams': 1,
         'freeze_encoder': True,
         'experiment_name': 't5_ft_frozen_encoder',
