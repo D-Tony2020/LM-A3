@@ -448,7 +448,13 @@ def _auto_submit_and_push(label: str) -> None:
     if c.returncode != 0:
         print(f'  commit skipped: {c.stdout.strip() or c.stderr.strip()}')
         return
-    p = subprocess.run(['git', '-C', root, 'push', 'origin', 'main'],
+
+    # Push whatever branch we are on — so plan-c session pushes plan-c
+    # and the classic main session pushes main, no clobbering.
+    br = subprocess.run(['git', '-C', root, 'rev-parse', '--abbrev-ref', 'HEAD'],
+                        capture_output=True, text=True)
+    branch = br.stdout.strip() or 'main'
+    p = subprocess.run(['git', '-C', root, 'push', 'origin', branch],
                        capture_output=True, text=True, timeout=120)
     if p.returncode == 0:
         print(f'  pushed: Colab auto-submit: {label}')
