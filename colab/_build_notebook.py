@@ -5,7 +5,6 @@ written to `colab/A4_colab.ipynb` and is the file you actually open in
 Google Colab.
 """
 import json
-import os
 from pathlib import Path
 
 
@@ -29,131 +28,132 @@ def code(*lines: str) -> dict:
 
 CELLS = [
     md(
-        '# A4 Colab Driver — Text-to-SQL Experiment Engine',
+        '# A4 — Colab Driver',
         '',
-        'Drives the long-running experiments that don\'t fit on the local 4 GB GPU.',
-        'Each section is self-contained: re-run only the cells you need.',
+        '**Goal**: produce two missing submission files that local 4 GB GPU cannot make:',
         '',
-        'Pre-flight checklist:',
-        '- The repo is on Google Drive at `MyDrive/A4/a4-D-Tony2020/` (edit `PROJECT_DIR` below if different).',
-        '- Runtime → Change runtime type → GPU (T4 free / A100 Pro+).',
-        '- HuggingFace token is needed for Gemma. Get one at https://huggingface.co/settings/tokens and accept the licence at https://huggingface.co/google/gemma-3-1b-it.',
+        '- `results/t5_scr_test.{sql,pkl}` — T5 trained from scratch (Task 2)',
+        '- `results/test_test.{sql,pkl}` — Gemma prompting (Task 3)',
+        '',
+        '`results/t5_ft_test.{sql,pkl}` is already in the repo (dev F1 ≈ 0.52, produced locally).',
+        '',
+        '**Pre-flight**: Runtime → Change runtime type → **T4** (free) is enough; **A100** if you have Pro+.',
     ),
 
-    md('## 1. Mount Drive and enter the project'),
+    md('## 1. Clone repo + install deps'),
     code(
-        'from google.colab import drive',
-        'drive.mount(\'/content/drive\')',
+        '# Clone the project from GitHub (fastest path; no Drive setup needed).',
+        '# Replace the URL if your fork lives elsewhere.',
+        'import os, subprocess',
+        'REPO_URL = \'https://github.com/Cornell-Tech-CS5744-Spring-2026/a4-D-Tony2020.git\'',
+        'PROJECT_DIR = \'/content/a4-D-Tony2020\'',
         '',
-        '# Edit this if your repo lives elsewhere on Drive.',
-        'PROJECT_DIR = \'/content/drive/MyDrive/A4/a4-D-Tony2020\'',
-        '',
-        'import os, sys',
+        'if not os.path.exists(PROJECT_DIR):',
+        '    subprocess.run([\'git\', \'clone\', REPO_URL, PROJECT_DIR], check=True)',
         'os.chdir(PROJECT_DIR)',
-        'sys.path.insert(0, PROJECT_DIR)',
-        '!pwd && ls --color=never',
+        '!git pull --quiet',
+        '!ls --color=never',
     ),
-
-    md('## 2. Install dependencies (skip if already in venv)'),
     code(
         '# Colab\'s base image already ships torch+CUDA; just add the project deps.',
         '!pip install -q transformers==4.51.3 accelerate==0.29.3 bitsandbytes==0.43.1 \\',
         '    sentencepiece==0.2.0 tokenizers==0.21.0 nltk==3.8.1 wandb==0.15.10 tqdm==4.66.1',
-        '!python -c "import torch, transformers; print(\'torch\', torch.__version__, \'cuda\', torch.cuda.is_available()); print(\'transformers\', transformers.__version__)"',
+        'import torch, transformers',
+        'print(\'torch\', torch.__version__, \'cuda\', torch.cuda.is_available())',
+        'print(\'transformers\', transformers.__version__)',
+        '!nvidia-smi --query-gpu=name,memory.total --format=csv',
     ),
 
-    md('## 3. HuggingFace login (only required for Gemma)'),
+    md('## 2. HuggingFace login (only required for Gemma)'),
     code(
         'from huggingface_hub import login',
         'import getpass',
         '',
-        '# Paste your token here. It is NEVER written to disk.',
+        '# Use a *classic Read* token (https://huggingface.co/settings/tokens).',
+        '# Fine-grained tokens need extra perms for gated repos.',
+        '# License must already be accepted at https://huggingface.co/google/gemma-3-1b-it',
         'token = getpass.getpass(\'HF token: \')',
         'login(token=token, add_to_git_credential=False)',
-        '',
-        '# Sanity: confirm we can see Gemma-3-1B (will fail if licence not accepted)',
-        '!python -c "from huggingface_hub import HfApi; print(HfApi().model_info(\'google/gemma-3-1b-it\').siblings[0])"',
+        'print(\'logged in OK\')',
     ),
 
-    md('## 4. GPU + dataset sanity'),
-    code(
-        '!nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv',
-        '!python -c "from load_data import load_t5_data; t,d,e=load_t5_data(8,16); print(\'train\', len(t), \'dev\', len(d), \'test\', len(e))"',
-    ),
-
-    md('## 5. Cache GT dev records (one-off, ~40 s)'),
+    md('## 3. Cache GT dev records (one-off, ~40 s)'),
     code(
         '!python cache_gt_records.py --split dev',
     ),
 
     md(
-        '## 6. T5 finetune — full run',
+        '## 4. FAST PATH — close the two missing submissions',
         '',
-        'On a T4 (16 GB) you can use the un-shrunk batch sizes. The local-tuned',
-        '4 GB-friendly settings still work, just slower per epoch.',
-    ),
-    code(
-        '# Quick milestone-clearing baseline.',
-        '!python colab_train.py --task t5 --config t5_ft_baseline',
-    ),
-    code(
-        '# Longer / aggressive finetune.',
-        '!python colab_train.py --task t5 --config t5_ft_long',
-    ),
-    code(
-        '# Frozen-encoder ablation (cheap, useful for the report).',
-        '!python colab_train.py --task t5 --config t5_ft_frozen_encoder',
-    ),
-
-    md('## 7. T5 from scratch — long run on Colab GPU'),
-    code(
-        '!python colab_train.py --task t5 --config t5_scr_baseline',
-    ),
-    code(
-        '# Push for max F1 — bigger batch, more epochs. Best on A100 / V100.',
-        '!python colab_train.py --task t5 --config t5_scr_long',
-    ),
-
-    md(
-        '## 8. Gemma prompting suite (batch mode)',
-        '',
-        'Sweeps the four most informative ICL configs in one go and dashboards the',
-        'best Record F1 per config.',
+        'Runs T5 from scratch + Gemma 1B 3-shot BM25-with-schema in sequence.',
+        'On a T4 this is roughly 3 h training + 30 min prompting. The batch mode',
+        'continues even if one config fails so you don\'t lose the night to a bug.',
     ),
     code(
         '!python colab_train.py --task batch --config \\',
-        '    "prompting:gemma1b_k0,prompting:gemma1b_k0_schema,prompting:gemma1b_k1_random,prompting:gemma1b_k3_random,prompting:gemma1b_k3_bm25,prompting:gemma1b_k3_bm25_schema"',
+        '    "t5:t5_scr_colab,prompting:gemma1b_k3_bm25_schema"',
     ),
 
-    md('## 9. Optional — large Gemma with 4-bit quantization'),
+    md(
+        '## 5. (Optional) bonus — top the local T5 ft baseline',
+        '',
+        'iter 001 on a 4 GB local card hit dev_F1=0.5171. With Colab\'s 16 GB+ you',
+        'can afford bigger batches and beam search at decode time, which often',
+        'adds 1-3 F1 points. Skip if you only need the milestone.',
+    ),
     code(
-        '# Needs A100 ideally; on T4 will be slow but feasible thanks to bitsandbytes nf4.',
+        '!python colab_train.py --task t5 --config t5_ft_colab',
+    ),
+    code(
+        '# Aggressive 20-epoch finetune. Run only if the cheaper t5_ft_colab',
+        '# already beat the local baseline.',
+        '!python colab_train.py --task t5 --config t5_ft_colab_long',
+    ),
+
+    md('## 6. (Optional) prompting ablations for the report'),
+    code(
+        '# Sweep three configs in one go: zero-shot, 3-shot random, 3-shot BM25',
+        '# (the schema-on variant was already covered in the FAST PATH).',
+        '!python colab_train.py --task batch --config \\',
+        '    "prompting:gemma1b_k0,prompting:gemma1b_k3_random,prompting:gemma1b_k3_bm25"',
+    ),
+
+    md(
+        '## 7. (Optional, A100) — bigger Gemma',
+        '',
+        'On a T4 this will work but generate slowly. On an A100 it\'s painless.',
+    ),
+    code(
         '!python colab_train.py --task prompting --config gemma27b_k3_bm25_schema_q4',
     ),
 
-    md('## 10. Dashboard + housekeeping'),
+    md('## 8. Pick best per track and rename to leaderboard files'),
+    code(
+        '!python make_submission.py',
+    ),
+
+    md('## 9. Dashboard + push results back to GitHub'),
     code(
         '!python colab_train.py --task dashboard',
     ),
     code(
-        '# All artefacts already live on Drive (project is mounted there), so',
-        '# nothing to copy — just confirm what was saved.',
-        '!ls -la results/ | head',
-        '!ls -la records/ | head',
-        '!tail -n 5 experiments/registry.csv',
-    ),
-
-    md(
-        '## 11. (Optional) git push from Colab',
+        '# Configure git author once per Colab session.',
+        '!git config user.email "your@email"',
+        '!git config user.name "Your Name"',
         '',
-        'Only run if you want to commit Colab-produced submissions back to GitHub.',
-        'Substitute the actual remote URL.',
+        '# Verify the canonical submission files exist before pushing.',
+        '!ls -la results/t5_ft_test.sql results/t5_scr_test.sql results/test_test.sql 2>/dev/null',
+        '!ls -la records/t5_ft_test.pkl records/t5_scr_test.pkl records/test_test.pkl 2>/dev/null',
+        '',
+        '# Stage the artefacts the leaderboard needs + the registry.',
+        '!git add results/ records/ experiments/registry.csv experiments/runs/',
+        '!git status -s',
     ),
     code(
-        '!git -C $PROJECT_DIR status -s',
-        '# !git -C $PROJECT_DIR add results/ records/ experiments/registry.csv experiments/runs/',
-        '# !git -C $PROJECT_DIR commit -m "Colab batch run"',
-        '# !git -C $PROJECT_DIR push origin main',
+        '# Commit + push. Edit the message if you want.',
+        'commit_msg = "Colab batch: t5_scr + gemma_1b prompting submissions"',
+        '!git commit -m "$commit_msg"',
+        '!git push origin main',
     ),
 ]
 

@@ -109,6 +109,54 @@ T5_CONFIGS = {
         'freeze_encoder': False,
         'experiment_name': 't5_scr_long',
     },
+
+    # === Colab-targeted configs (T4 16 GB or better) ============
+    # AMP is enabled on Colab — the cuBLAS bf16 issue that hit the local
+    # RTX 3050 Ti laptop card does not reproduce on T4/V100/A100.
+
+    # T5 ft on Colab: same training recipe as the local baseline but with
+    # bs=16 + AMP + beam=4 final decoding. Should beat dev_F1=0.5171 if
+    # beam helps on a fresh model (it didn't on iter 001's checkpoint).
+    't5_ft_colab': {
+        'model_type': 't5_ft', 'finetune': True,
+        'lr': 1e-4, 'weight_decay': 0.01,
+        'max_epochs': 10, 'patience': 3, 'warmup_steps': 500,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 16, 'test_batch_size': 32,
+        'max_new_tokens': 256, 'num_beams': 4,
+        'freeze_encoder': False,
+        'experiment_name': 't5_ft_colab',
+    },
+
+    # Aggressive Colab finetune: 20 epochs, lr=3e-4 peak, larger batch.
+    # Run if the cheaper t5_ft_colab beats the local baseline.
+    't5_ft_colab_long': {
+        'model_type': 't5_ft', 'finetune': True,
+        'lr': 3e-4, 'weight_decay': 0.01,
+        'max_epochs': 20, 'patience': 5, 'warmup_steps': 1000,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 32, 'test_batch_size': 32,
+        'max_new_tokens': 256, 'num_beams': 4,
+        'freeze_encoder': False,
+        'experiment_name': 't5_ft_colab_long',
+    },
+
+    # T5 from scratch — Colab-sized. The local 4 GB GPU cannot run this
+    # at all (random init + Adam states blow VRAM). bs=32 + AMP fits T4
+    # comfortably, finishes in ~3 h, and produces a real t5_scr submission.
+    't5_scr_colab': {
+        'model_type': 't5_scr', 'finetune': False,
+        'lr': 5e-4, 'weight_decay': 0.01,
+        'max_epochs': 30, 'patience': 5, 'warmup_steps': 2000,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 32, 'test_batch_size': 32,
+        'max_new_tokens': 256, 'num_beams': 1,
+        'freeze_encoder': False,
+        'experiment_name': 't5_scr_colab',
+    },
 }
 
 
