@@ -157,6 +157,38 @@ T5_CONFIGS = {
         'freeze_encoder': False,
         'experiment_name': 't5_scr_colab',
     },
+
+    # === H100 configs (80 GB VRAM, deadline-mode) ================
+    # Massive batch + beam=4 eval. On an H100 the whole T5 ft or scr
+    # training budget finishes in roughly 10-25 minutes end-to-end.
+
+    # T5 finetune on H100: bs=128 crushes the loader; 15 epochs with
+    # lr=2e-4 peak. Beam search during the last eval.
+    't5_ft_h100': {
+        'model_type': 't5_ft', 'finetune': True,
+        'lr': 2e-4, 'weight_decay': 0.01,
+        'max_epochs': 15, 'patience': 4, 'warmup_steps': 500,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 64, 'test_batch_size': 64,
+        'max_new_tokens': 256, 'num_beams': 4,
+        'freeze_encoder': False,
+        'experiment_name': 't5_ft_h100',
+    },
+
+    # T5 from scratch on H100: bs=128, 40 epochs, a bigger peak LR
+    # because random-init needs more gradient per step.
+    't5_scr_h100': {
+        'model_type': 't5_scr', 'finetune': False,
+        'lr': 7e-4, 'weight_decay': 0.01,
+        'max_epochs': 40, 'patience': 6, 'warmup_steps': 1000,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 128, 'test_batch_size': 64,
+        'max_new_tokens': 256, 'num_beams': 4,
+        'freeze_encoder': False,
+        'experiment_name': 't5_scr_h100',
+    },
 }
 
 
