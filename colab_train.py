@@ -52,19 +52,19 @@ T5_CONFIGS = {
         'experiment_name': 't5_ft_baseline',
     },
 
-    # Longer finetune with higher peak LR. Local-GPU safe: bs=4, ga=4 to
-    # keep the same effective batch as the baseline (so LR-schedule math
-    # doesn't shift) but spread over 15 epochs instead of 10. Beam search
-    # left at 1 for speed during intra-training eval; use a dedicated
-    # beam-eval script once training finishes.
+    # Longer finetune with higher peak LR. Local-GPU safe: bs=2, ga=8 to
+    # keep the same effective batch (16) as the baseline but halve peak
+    # activation memory — bs=4 tripped OOM on an outlier-long sequence at
+    # batch 21 on the RTX 3050 Ti with grad_ckpt + fp32. bs=2 leaves a
+    # comfortable margin. Takes ~5 h on this GPU.
     't5_ft_long': {
         'model_type': 't5_ft', 'finetune': True,
         'lr': 3e-4, 'weight_decay': 0.01,
         'max_epochs': 15, 'patience': 5, 'warmup_steps': 1000,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
-        'grad_accumulation_steps': 4, 'use_amp': False,
+        'grad_accumulation_steps': 8, 'use_amp': False,
         'gradient_checkpointing': True,
-        'batch_size': 4, 'test_batch_size': 8,
+        'batch_size': 2, 'test_batch_size': 8,
         'max_new_tokens': 256, 'num_beams': 1,
         'freeze_encoder': False,
         'experiment_name': 't5_ft_long',
