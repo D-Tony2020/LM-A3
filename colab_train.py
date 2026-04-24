@@ -52,15 +52,20 @@ T5_CONFIGS = {
         'experiment_name': 't5_ft_baseline',
     },
 
-    # Longer finetune with higher LR. Local-GPU sized.
+    # Longer finetune with higher peak LR. Local-GPU safe: bs=4, ga=4 to
+    # keep the same effective batch as the baseline (so LR-schedule math
+    # doesn't shift) but spread over 15 epochs instead of 10. Beam search
+    # left at 1 for speed during intra-training eval; use a dedicated
+    # beam-eval script once training finishes.
     't5_ft_long': {
         'model_type': 't5_ft', 'finetune': True,
         'lr': 3e-4, 'weight_decay': 0.01,
-        'max_epochs': 20, 'patience': 5, 'warmup_steps': 1000,
+        'max_epochs': 15, 'patience': 5, 'warmup_steps': 1000,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
-        'grad_accumulation_steps': 4, 'use_amp': True,
-        'batch_size': 8, 'test_batch_size': 16,
-        'max_new_tokens': 256, 'num_beams': 4,
+        'grad_accumulation_steps': 4, 'use_amp': False,
+        'gradient_checkpointing': True,
+        'batch_size': 4, 'test_batch_size': 8,
+        'max_new_tokens': 256, 'num_beams': 1,
         'freeze_encoder': False,
         'experiment_name': 't5_ft_long',
     },

@@ -1,0 +1,120 @@
+{
+  "config": {
+    "model_type": "t5_ft",
+    "finetune": true,
+    "lr": 0.0001,
+    "weight_decay": 0.01,
+    "max_epochs": 10,
+    "patience": 3,
+    "warmup_steps": 500,
+    "lr_schedule": "cosine",
+    "grad_clip": 1.0,
+    "grad_accumulation_steps": 4,
+    "use_amp": false,
+    "gradient_checkpointing": true,
+    "batch_size": 4,
+    "test_batch_size": 8,
+    "max_new_tokens": 256,
+    "num_beams": 1,
+    "freeze_encoder": false,
+    "experiment_name": "t5_ft_baseline",
+    "colab": false
+  },
+  "results": {
+    "dev_loss": 0.05113392622671045,
+    "dev_record_f1": 0.517106014715101,
+    "dev_record_em": 0.45278969957081544,
+    "dev_sql_em": 0.017167381974248927,
+    "dev_error_rate": 0.38626609442060084,
+    "eval_time_sec": 569.7533769607544,
+    "prediction_path": "D:\\Desktop\\Graduate School\\LM\\homework\\A4\\a4-D-Tony2020\\results\\t5_ft_t5_ft_baseline_dev.sql",
+    "record_path": "D:\\Desktop\\Graduate School\\LM\\homework\\A4\\a4-D-Tony2020\\records\\t5_ft_t5_ft_baseline_dev.pkl",
+    "duration_sec": 10848.868117570877,
+    "epochs_trained": 10,
+    "test_prediction_path": "D:\\Desktop\\Graduate School\\LM\\homework\\A4\\a4-D-Tony2020\\results\\t5_ft_t5_ft_baseline_test.sql",
+    "test_record_path": "D:\\Desktop\\Graduate School\\LM\\homework\\A4\\a4-D-Tony2020\\records\\t5_ft_t5_ft_baseline_test.pkl",
+    "training_log": [
+      {
+        "epoch": 1,
+        "train_loss": 3.4556257756857254,
+        "dev_loss": 0.7012409355458332,
+        "dev_record_f1": 0.11802575048283262,
+        "lr": 5.28e-05,
+        "elapsed_sec": 858.8486731052399
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.6007578562333159,
+        "dev_loss": 0.2403098503338009,
+        "dev_record_f1": 0.15196492748394508,
+        "lr": 9.999809237013015e-05,
+        "elapsed_sec": 1716.197291135788
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.273585114765463,
+        "dev_loss": 0.13635399305736362,
+        "dev_record_f1": 0.22697191473836809,
+        "lr": 9.979267763346183e-05,
+        "elapsed_sec": 2640.659381866455
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.18453929128332103,
+        "dev_loss": 0.10571620052840425,
+        "dev_record_f1": 0.33070168380420184,
+        "lr": 9.924968918006394e-05,
+        "elapsed_sec": 3610.0908184051514
+      },
+      {
+        "epoch": 5,
+        "train_loss": 0.1436580350214671,
+        "dev_loss": 0.08573888400944829,
+        "dev_record_f1": 0.39835107035511047,
+        "lr": 9.837280824659755e-05,
+        "elapsed_sec": 4504.0242240428925
+      },
+      {
+        "epoch": 6,
+        "train_loss": 0.11901408121609057,
+        "dev_loss": 0.07238030123935178,
+        "dev_record_f1": 0.4421478931126895,
+        "lr": 9.716797972234972e-05,
+        "elapsed_sec": 5373.739607334137
+      },
+      {
+        "epoch": 7,
+        "train_loss": 0.10170370090886426,
+        "dev_loss": 0.06325541294193615,
+        "dev_record_f1": 0.465937268456036,
+        "lr": 9.564337184534829e-05,
+        "elapsed_sec": 6420.901347398758
+      },
+      {
+        "epoch": 8,
+        "train_loss": 0.0883121684906887,
+        "dev_loss": 0.05627490131600941,
+        "dev_record_f1": 0.48478012559218964,
+        "lr": 9.380932082509343e-05,
+        "elapsed_sec": 7595.8235330581665
+      },
+      {
+        "epoch": 9,
+        "train_loss": 0.07830924656176698,
+        "dev_loss": 0.05113392622671045,
+        "dev_record_f1": 0.517106014715101,
+        "lr": 9.167826076734134e-05,
+        "elapsed_sec": 8775.106456756592
+      },
+      {
+        "epoch": 10,
+        "train_loss": 0.0704852850899275,
+        "dev_loss": 0.04569752159733266,
+        "dev_record_f1": 0.5168585576527598,
+        "lr": 8.926463937602081e-05,
+        "elapsed_sec": 9887.125670671463
+      }
+    ]
+  },
+  "run_id": "t5_ft_baseline_20260424_040954"
+}
