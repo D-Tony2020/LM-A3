@@ -38,3 +38,8 @@ desktop.ini
 # Local env / wandb
 .env
 wandb/
+
+# Private project-planning / session docs (not part of the submitted code)
+CLAUDE.md
+experiments/agent_log/
+.claude/
