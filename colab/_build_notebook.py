@@ -1,8 +1,10 @@
-"""Generate A4_colab.ipynb from a list of (kind, source) cells.
+"""Generate A4_colab.ipynb — one linear path, "Run all" friendly.
 
-Run this once after editing the cell list below. The output notebook is
-written to `colab/A4_colab.ipynb` and is the file you actually open in
-Google Colab.
+No branches, no optional cells. Edit the CELLS list and re-run:
+
+    python colab/_build_notebook.py
+
+Expected runtime on Colab H100: roughly 90 minutes end-to-end.
 """
 import json
 from pathlib import Path
@@ -28,184 +30,84 @@ def code(*lines: str) -> dict:
 
 CELLS = [
     md(
-        '# A4 — Colab Driver',
+        '# A4 — Colab driver',
         '',
-        '**Goal**: produce two missing submission files that local 4 GB GPU cannot make:',
+        '"Runtime → Run all". One linear path. Expected total on H100: ~90 min.',
         '',
-        '- `results/t5_scr_test.{sql,pkl}` — T5 trained from scratch (Task 2)',
-        '- `results/test_test.{sql,pkl}` — Gemma prompting (Task 3)',
-        '',
-        '`results/t5_ft_test.{sql,pkl}` is already in the repo (dev F1 ≈ 0.52, produced locally).',
-        '',
-        '**Pre-flight**: Runtime → Change runtime type → **T4** (free) is enough; **A100** if you have Pro+.',
+        'Pre-flight:',
+        '- Runtime → Change runtime type → **H100** GPU.',
+        '- Accept licences at https://huggingface.co/google/codegemma-7b-it and https://huggingface.co/google/gemma-3-1b-it.',
+        '- Have a GitHub classic PAT (`repo` scope) and an HF classic Read token handy.',
     ),
 
-    md(
-        '## 1. Get the project into the Colab runtime',
-        '',
-        'GitHub Classroom repos are private, so a plain `git clone` fails. Pick',
-        '**one** of the two cells below — run only that one, skip the other.',
-    ),
-    md('### 1a. Clone via GitHub Personal Access Token (fastest)'),
+    md('## 1. Clone repo'),
     code(
-        '# Generate a *classic* PAT at https://github.com/settings/tokens with',
-        '# the `repo` scope. The token is held in memory only and dropped after',
-        '# the clone — it is NOT persisted to disk.',
         'import os, subprocess, getpass',
         '',
-        '# Personal private mirror (Colab-friendly). The official classroom',
-        '# repo lives at Cornell-Tech-CS5744-Spring-2026/a4-D-Tony2020 but its',
-        '# org-SSO makes it awkward to clone from Colab.',
         'OWNER = \'D-Tony2020\'',
         'REPO  = \'LM-A3\'',
         'PROJECT_DIR = f\'/content/{REPO}\'',
         '',
+        'gh_token = getpass.getpass(\'GitHub PAT (repo scope): \')',
         'if not os.path.exists(PROJECT_DIR):',
-        '    gh_token = getpass.getpass(\'GitHub PAT (repo scope): \')',
         '    url = f\'https://{gh_token}@github.com/{OWNER}/{REPO}.git\'',
         '    subprocess.run([\'git\', \'clone\', url, PROJECT_DIR], check=True)',
-        '    del gh_token, url  # leave no token in the notebook state',
+        '    del url',
         '',
         'os.chdir(PROJECT_DIR)',
         '!git pull --quiet',
-        '!ls --color=never',
+        '',
+        '# Keep the token in the remote URL so auto-submit can push back.',
+        '# Clear the local variable so it does not linger in notebook state.',
+        'del gh_token',
+        '!git log --oneline -3',
     ),
-    md('### 1b. (Alternative) Mount Google Drive and use a copy already there'),
+
+    md('## 2. Install dependencies'),
     code(
-        '# Use this branch if you uploaded the project folder to Drive at',
-        '# `MyDrive/A4/a4-D-Tony2020`. Edit `PROJECT_DIR` if your path differs.',
-        'from google.colab import drive',
-        'drive.mount(\'/content/drive\')',
-        'import os',
-        'PROJECT_DIR = \'/content/drive/MyDrive/A4/a4-D-Tony2020\'',
-        'assert os.path.exists(PROJECT_DIR), f\'edit PROJECT_DIR — not found: {PROJECT_DIR}\'',
-        'os.chdir(PROJECT_DIR)',
-        '!ls --color=never',
-    ),
-    code(
-        '# Colab\'s base image already ships torch+CUDA; just add the project deps.',
         '!pip install -q transformers==4.51.3 accelerate==0.29.3 bitsandbytes==0.43.1 \\',
         '    sentencepiece==0.2.0 tokenizers==0.21.0 nltk==3.8.1 wandb==0.15.10 tqdm==4.66.1',
-        'import torch, transformers',
+        'import torch',
         'print(\'torch\', torch.__version__, \'cuda\', torch.cuda.is_available())',
-        'print(\'transformers\', transformers.__version__)',
         '!nvidia-smi --query-gpu=name,memory.total --format=csv',
     ),
 
-    md('## 2. HuggingFace login (only required for Gemma)'),
+    md('## 3. HuggingFace login'),
     code(
         'from huggingface_hub import login',
         'import getpass',
-        '',
-        '# Use a *classic Read* token (https://huggingface.co/settings/tokens).',
-        '# Fine-grained tokens need extra perms for gated repos.',
-        '# License must already be accepted at https://huggingface.co/google/gemma-3-1b-it',
-        'token = getpass.getpass(\'HF token: \')',
-        'login(token=token, add_to_git_credential=False)',
-        'print(\'logged in OK\')',
+        'hf_tok = getpass.getpass(\'HF token (classic Read): \')',
+        'login(token=hf_tok, add_to_git_credential=False)',
+        'del hf_tok',
+        'print(\'HF logged in OK\')',
     ),
 
-    md('## 3. Cache GT dev records (one-off, ~40 s)'),
-    code(
-        '!python cache_gt_records.py --split dev',
-    ),
+    md('## 4. Cache dev ground-truth records (~40 s)'),
+    code('!python cache_gt_records.py --split dev'),
 
     md(
-        '## 4. FAST PATH — close the two missing submissions',
+        '## 5. Run all three tracks',
         '',
-        'Runs T5 from scratch + Gemma 1B 3-shot BM25-with-schema in sequence.',
-        'The batch mode continues even if one config fails so you don\'t lose',
-        'the session to a bug.',
+        '`--auto-submit` commits and pushes after EACH successful track,',
+        'so a later failure never loses earlier results.',
         '',
-        '**Pick ONE cell based on the GPU you picked:**',
-        '- H100 (fastest, ~30-60 min total): cell 4a',
-        '- T4 / L4 / A100: cell 4b',
-    ),
-    md(
-        '### 4a. H100 fast path (recommended, with incremental auto-submit)',
-        '',
-        '`--auto-submit` means: after **each** successful run we regenerate the',
-        'canonical submission files, commit them, and push to origin. So if the',
-        'LLM track fails or the Colab session dies mid-way, the t5_ft and t5_scr',
-        'results are already safely on GitHub.',
-        '',
-        '**Prerequisite**: you must have accepted the CodeGemma licence at',
-        'https://huggingface.co/google/codegemma-7b-it (one click).',
+        'Order: T5 finetune (biggest scoring slot) → T5 from scratch → CodeGemma-7B LLM.',
     ),
     code(
-        '# Order: strongest track first (t5_ft) so the 35-point slot is locked',
-        '# in as early as possible. Then t5_scr, then CodeGemma-7B.',
         '!git config user.email "colab@runner"',
         '!git config user.name  "A4 Colab Runner"',
         '!python colab_train.py --task batch --auto-submit --config \\',
         '    "t5:t5_ft_h100,t5:t5_scr_h100,prompting:codegemma7b_k3_bm25_schema"',
     ),
-    md('### 4b. T4 / L4 / A100 fast path (smaller GPU, skip if using H100)'),
-    code(
-        '!python colab_train.py --task batch --auto-submit --config \\',
-        '    "t5:t5_scr_colab,prompting:gemma1b_k3_bm25_schema"',
-    ),
 
-    md(
-        '## 5. (Optional) bonus — top the local T5 ft baseline',
-        '',
-        'iter 001 on a 4 GB local card hit dev_F1=0.5171. With Colab\'s 16 GB+ you',
-        'can afford bigger batches and beam search at decode time, which often',
-        'adds 1-3 F1 points. Skip if you only need the milestone.',
-    ),
-    code(
-        '!python colab_train.py --task t5 --config t5_ft_colab',
-    ),
-    code(
-        '# Aggressive 20-epoch finetune. Run only if the cheaper t5_ft_colab',
-        '# already beat the local baseline.',
-        '!python colab_train.py --task t5 --config t5_ft_colab_long',
-    ),
+    md('## 6. Dashboard'),
+    code('!python colab_train.py --task dashboard'),
 
-    md('## 6. (Optional) prompting ablations for the report'),
-    code(
-        '# Sweep three configs in one go: zero-shot, 3-shot random, 3-shot BM25',
-        '# (the schema-on variant was already covered in the FAST PATH).',
-        '!python colab_train.py --task batch --config \\',
-        '    "prompting:gemma1b_k0,prompting:gemma1b_k3_random,prompting:gemma1b_k3_bm25"',
-    ),
-
-    md(
-        '## 7. (Optional, A100) — bigger Gemma',
-        '',
-        'On a T4 this will work but generate slowly. On an A100 it\'s painless.',
-    ),
-    code(
-        '!python colab_train.py --task prompting --config gemma27b_k3_bm25_schema_q4',
-    ),
-
-    md('## 8. Pick best per track and rename to leaderboard files'),
+    md('## 7. Final make_submission + push (catches anything auto-submit missed)'),
     code(
         '!python make_submission.py',
-    ),
-
-    md('## 9. Dashboard + push results back to GitHub'),
-    code(
-        '!python colab_train.py --task dashboard',
-    ),
-    code(
-        '# Configure git author once per Colab session.',
-        '!git config user.email "your@email"',
-        '!git config user.name "Your Name"',
-        '',
-        '# Verify the canonical submission files exist before pushing.',
-        '!ls -la results/t5_ft_test.sql results/t5_scr_test.sql results/test_test.sql 2>/dev/null',
-        '!ls -la records/t5_ft_test.pkl records/t5_scr_test.pkl records/test_test.pkl 2>/dev/null',
-        '',
-        '# Stage the artefacts the leaderboard needs + the registry.',
         '!git add results/ records/ experiments/registry.csv experiments/runs/',
-        '!git status -s',
-    ),
-    code(
-        '# Commit + push. The origin here is the mirror you cloned from; push',
-        '# to the classroom repo (the real graded one) from your local machine.',
-        'commit_msg = "Colab batch: t5_scr + gemma_1b prompting submissions"',
-        '!git commit -m "$commit_msg"',
+        '!git commit -m "Final: Colab session wrap-up" || echo "(nothing to commit)"',
         '!git push origin main',
     ),
 ]
@@ -219,14 +121,8 @@ NOTEBOOK = {
             'language': 'python',
             'name': 'python3',
         },
-        'language_info': {
-            'name': 'python',
-            'version': '3.10',
-        },
-        'colab': {
-            'provenance': [],
-            'gpuType': 'T4',
-        },
+        'language_info': {'name': 'python', 'version': '3.10'},
+        'colab': {'provenance': [], 'gpuType': 'H100'},
         'accelerator': 'GPU',
     },
     'nbformat': 4,
