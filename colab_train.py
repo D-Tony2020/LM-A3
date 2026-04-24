@@ -162,30 +162,36 @@ T5_CONFIGS = {
     # Massive batch + beam=4 eval. On an H100 the whole T5 ft or scr
     # training budget finishes in roughly 10-25 minutes end-to-end.
 
-    # T5 finetune on H100: bs=128 crushes the loader; 15 epochs with
-    # lr=2e-4 peak. Beam search during the last eval.
+    # T5 finetune on H100: bs=64, 20 epochs, greedy decoding (iter 001
+    # empirically showed beam=4 did NOT help on this task), label smoothing
+    # as a light regularizer against the 19% unbalanced-paren syntax errors
+    # we saw in the local submission.
     't5_ft_h100': {
         'model_type': 't5_ft', 'finetune': True,
         'lr': 2e-4, 'weight_decay': 0.01,
-        'max_epochs': 15, 'patience': 4, 'warmup_steps': 500,
+        'max_epochs': 20, 'patience': 5, 'warmup_steps': 500,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'label_smoothing': 0.1,
         'grad_accumulation_steps': 1, 'use_amp': True,
         'batch_size': 64, 'test_batch_size': 64,
-        'max_new_tokens': 256, 'num_beams': 4,
+        'max_new_tokens': 256, 'num_beams': 1,
         'freeze_encoder': False,
         'experiment_name': 't5_ft_h100',
     },
 
-    # T5 from scratch on H100: bs=128, 40 epochs, a bigger peak LR
-    # because random-init needs more gradient per step.
+    # T5 from scratch on H100: bs=128, 25 epochs. The intra-training eval
+    # is the real bottleneck on this GPU; 40-epoch runs spend more time on
+    # generation than on backprop. 25 is plenty for random init to
+    # establish a credible t5_scr submission.
     't5_scr_h100': {
         'model_type': 't5_scr', 'finetune': False,
-        'lr': 7e-4, 'weight_decay': 0.01,
-        'max_epochs': 40, 'patience': 6, 'warmup_steps': 1000,
+        'lr': 5e-4, 'weight_decay': 0.01,
+        'max_epochs': 25, 'patience': 5, 'warmup_steps': 1000,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'label_smoothing': 0.1,
         'grad_accumulation_steps': 1, 'use_amp': True,
         'batch_size': 128, 'test_batch_size': 64,
-        'max_new_tokens': 256, 'num_beams': 4,
+        'max_new_tokens': 256, 'num_beams': 1,
         'freeze_encoder': False,
         'experiment_name': 't5_scr_h100',
     },
@@ -242,6 +248,25 @@ PROMPT_CONFIGS = {
         'k': 3, 'example_selection': 'bm25', 'include_schema': True,
         'quantization': True, 'max_new_tokens': 256, 'seed': 42,
         'experiment_name': 'gemma27b_k3_bm25_schema_q4',
+    },
+
+    # CodeGemma 7B instruction-tuned: the Gemma-family model specifically
+    # continued-trained on ~500 GB of code. By far the strongest LLM option
+    # for text-to-SQL that fits a single H100 at bf16 in under an hour.
+    # Requires accepting the licence at
+    # https://huggingface.co/google/codegemma-7b-it .
+    'codegemma7b_k3_bm25_schema': {
+        'model_type': 'codegemma_7b', 'model_name': 'codegemma-7b',
+        'k': 3, 'example_selection': 'bm25', 'include_schema': True,
+        'quantization': False, 'max_new_tokens': 256, 'seed': 42,
+        'experiment_name': 'codegemma7b_k3_bm25_schema',
+    },
+    # Same config but quantized (nf4) if VRAM is tight.
+    'codegemma7b_k3_bm25_schema_q4': {
+        'model_type': 'codegemma_7b', 'model_name': 'codegemma-7b',
+        'k': 3, 'example_selection': 'bm25', 'include_schema': True,
+        'quantization': True, 'max_new_tokens': 256, 'seed': 42,
+        'experiment_name': 'codegemma7b_k3_bm25_schema_q4',
     },
 }
 
@@ -382,12 +407,71 @@ def run_prompting(config_name: str) -> None:
     print(f"  Err rate:    {results['dev_error_rate']*100:.2f}%")
 
 
-def run_batch(spec: str, continue_on_error: bool = True) -> None:
+def _auto_submit_and_push(label: str) -> None:
+    """Regenerate canonical submission files, commit, and push to origin.
+
+    Silently succeeds if there's nothing to commit or git isn't
+    configured. Never raises — a push failure should not abort the rest
+    of a batch run.
+    """
+    import subprocess
+    root = os.path.dirname(os.path.abspath(__file__))
+    print(f'\n--- auto-submit after {label} ---')
+
+    # 1) regenerate canonical submission files from registry
+    rc = subprocess.run([sys.executable, os.path.join(root, 'make_submission.py')])
+    if rc.returncode != 0:
+        print('  !! make_submission exited non-zero; skipping push')
+        return
+
+    # 2) is there anything new to commit?
+    r = subprocess.run(['git', '-C', root, 'status', '--porcelain'],
+                       capture_output=True, text=True)
+    if not r.stdout.strip():
+        print('  (nothing to commit)')
+        return
+
+    # 3) configure author if missing (Colab default runtime has no git identity)
+    cfg = subprocess.run(['git', '-C', root, 'config', 'user.email'],
+                         capture_output=True, text=True)
+    if not cfg.stdout.strip():
+        subprocess.run(['git', '-C', root, 'config', 'user.email', 'colab@runner'])
+        subprocess.run(['git', '-C', root, 'config', 'user.name', 'A4 Colab Runner'])
+
+    # 4) stage + commit + push (non-fatal on any error)
+    subprocess.run(['git', '-C', root, 'add',
+                    'results/', 'records/',
+                    'experiments/registry.csv', 'experiments/runs/'])
+    c = subprocess.run(['git', '-C', root, 'commit', '-m',
+                        f'Colab auto-submit: {label}'],
+                       capture_output=True, text=True)
+    if c.returncode != 0:
+        print(f'  commit skipped: {c.stdout.strip() or c.stderr.strip()}')
+        return
+    p = subprocess.run(['git', '-C', root, 'push', 'origin', 'main'],
+                       capture_output=True, text=True, timeout=120)
+    if p.returncode == 0:
+        print(f'  pushed: Colab auto-submit: {label}')
+    else:
+        # Print the last ~400 chars so the token doesn't leak if embedded
+        tail = (p.stderr or p.stdout).strip().splitlines()[-5:]
+        print('  push failed:')
+        for line in tail:
+            print('    ' + line)
+
+
+def run_batch(spec: str, continue_on_error: bool = True,
+              auto_submit: bool = False) -> None:
     """Run a comma-separated list of configs in sequence.
 
     Each entry is `kind:config_name` where kind in {t5, prompting}.
     Example: `t5:t5_ft_baseline,prompting:gemma1b_k0,t5:t5_ft_long`.
     Bare names without the prefix are inferred from the config dicts.
+
+    If `auto_submit` is True, after every SUCCESSFUL run we regenerate
+    the canonical submission files, commit, and push to origin. This
+    preserves progress even if a later run crashes or the Colab session
+    is preempted.
     """
     items: list = []
     for raw in spec.split(','):
@@ -409,7 +493,8 @@ def run_batch(spec: str, continue_on_error: bool = True) -> None:
         print('[batch] no valid configs to run', file=sys.stderr)
         sys.exit(1)
 
-    print(f'\n=== BATCH RUN: {len(items)} experiments ===')
+    print(f'\n=== BATCH RUN: {len(items)} experiments '
+          f'(auto_submit={auto_submit}) ===')
     for i, (k, n) in enumerate(items, 1):
         print(f'  [{i}/{len(items)}] {k}:{n}')
     print()
@@ -434,6 +519,10 @@ def run_batch(spec: str, continue_on_error: bool = True) -> None:
             traceback.print_exc()
             if not continue_on_error:
                 sys.exit(1)
+            continue  # don't auto-submit on failure
+
+        if auto_submit:
+            _auto_submit_and_push(f'{kind}:{name}')
 
     print(f'\n=== BATCH COMPLETE: {len(items) - len(failures)}/{len(items)} succeeded ===')
     if failures:
@@ -451,6 +540,9 @@ def main() -> None:
                         help='Config name (for t5/prompting) or comma-separated list (for batch)')
     parser.add_argument('--strict', action='store_true',
                         help='In batch mode, stop on first failure instead of continuing')
+    parser.add_argument('--auto-submit', action='store_true',
+                        help='In batch mode, after every successful run regenerate '
+                             'canonical submission files and push to origin')
     args = parser.parse_args()
 
     if args.task == 'dashboard':
@@ -474,7 +566,8 @@ def main() -> None:
     elif args.task == 'prompting':
         run_prompting(args.config)
     else:  # batch
-        run_batch(args.config, continue_on_error=not args.strict)
+        run_batch(args.config, continue_on_error=not args.strict,
+                  auto_submit=args.auto_submit)
 
 
 if __name__ == '__main__':

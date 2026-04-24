@@ -4,8 +4,7 @@ import random
 
 from tqdm import tqdm
 import torch
-from transformers import (AutoTokenizer, AutoProcessor,
-                          Gemma3ForCausalLM, Gemma3ForConditionalGeneration)
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import BitsAndBytesConfig
 
 from utils import (set_random_seeds, compute_metrics, save_queries_and_records,
@@ -97,39 +96,38 @@ def eval_outputs(eval_x, eval_y, gt_sql_path, model_sql_path,
     return sql_em, record_em, record_f1, model_error_msgs, error_rate
 
 
+_MODEL_NAME_TO_HF_ID = {
+    'gemma-1b':      'google/gemma-3-1b-it',
+    'gemma-4b':      'google/gemma-3-4b-it',
+    'gemma-12b':     'google/gemma-3-12b-it',
+    'gemma-27b':     'google/gemma-3-27b-it',
+    'codegemma-7b':  'google/codegemma-7b-it',
+}
+
+
 def initialize_model_and_tokenizer(model_name, to_quantize=False):
-    """Build (tokenizer, model) for the supported Gemma variants."""
-    if model_name == 'gemma-1b':
-        model_id = 'google/gemma-3-1b-it'
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        if to_quantize:
-            nf4_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')
-            model = Gemma3ForCausalLM.from_pretrained(
-                model_id, quantization_config=nf4_config, torch_dtype=torch.bfloat16,
-            )
-        else:
-            model = Gemma3ForCausalLM.from_pretrained(
-                model_id, torch_dtype=torch.bfloat16,
-            ).to(DEVICE)
-        return tokenizer, model
+    """Build (tokenizer, model) for any supported Gemma / CodeGemma variant.
 
-    if model_name in {'gemma-4b', 'gemma-12b', 'gemma-27b', 'codegemma-7b'}:
-        size_to_id = {
-            'gemma-4b': 'google/gemma-3-4b-it',
-            'gemma-12b': 'google/gemma-3-12b-it',
-            'gemma-27b': 'google/gemma-3-27b-it',
-            'codegemma-7b': 'google/codegemma-7b-it',
-        }
-        model_id = size_to_id[model_name]
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        kwargs = {'device_map': 'auto', 'torch_dtype': torch.bfloat16}
-        if to_quantize:
-            kwargs['quantization_config'] = BitsAndBytesConfig(
-                load_in_4bit=True, bnb_4bit_quant_type='nf4')
-        model = Gemma3ForConditionalGeneration.from_pretrained(model_id, **kwargs).eval()
-        return tokenizer, model
+    Uses AutoModelForCausalLM so the right architecture class is picked
+    from the checkpoint's config.json. Gemma-3-* loads as
+    Gemma3ForCausalLM, CodeGemma-7B as GemmaForCausalLM — both expose
+    the same generate() interface.
+    """
+    if model_name not in _MODEL_NAME_TO_HF_ID:
+        raise NotImplementedError(
+            f"Model '{model_name}' not in supported set: "
+            f"{sorted(_MODEL_NAME_TO_HF_ID)}"
+        )
+    model_id = _MODEL_NAME_TO_HF_ID[model_name]
 
-    raise NotImplementedError(f"Model '{model_name}' is not implemented in this template.")
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    kwargs = {'torch_dtype': torch.bfloat16, 'device_map': 'auto'}
+    if to_quantize:
+        kwargs['quantization_config'] = BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_quant_type='nf4')
+
+    model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs).eval()
+    return tokenizer, model
 
 
 def main():

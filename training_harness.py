@@ -108,7 +108,9 @@ def train_t5(model, config: dict, train_loader, dev_loader,
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(trainable_params, lr=lr, weight_decay=weight_decay,
                                   eps=1e-8, betas=(0.9, 0.999))
-    criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX)
+    label_smoothing = config.get('label_smoothing', 0.0)
+    criterion = nn.CrossEntropyLoss(ignore_index=PAD_IDX,
+                                    label_smoothing=label_smoothing)
     # GradScaler is only needed for fp16; bf16 has the full fp32 range.
     use_scaler = use_amp and amp_dtype == torch.float16
     scaler = torch.cuda.amp.GradScaler(enabled=use_scaler)
