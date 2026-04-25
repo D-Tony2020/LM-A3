@@ -184,14 +184,17 @@ T5_CONFIGS = {
         'experiment_name': 't5_ft_h100',
     },
 
-    # T5 from scratch on H100: bs=128, 25 epochs. The intra-training eval
-    # is the real bottleneck on this GPU; 40-epoch runs spend more time on
-    # generation than on backprop. 25 is plenty for random init to
-    # establish a credible t5_scr submission.
+    # T5 from scratch on H100. The first attempt early-stopped at epoch 6
+    # because warmup_steps=1000 was longer than the entire 25-epoch budget
+    # of 825 optimizer steps — the model never reached peak LR. This
+    # rewrite shortens warmup to 200 steps, lowers peak LR from 5e-4 to
+    # 3e-4 (more stable for random init), bumps max_epochs to 40, and
+    # raises patience to 8 so a slow random-init start does not trigger
+    # early stop before the model produces any valid SQL.
     't5_scr_h100': {
         'model_type': 't5_scr', 'finetune': False,
-        'lr': 5e-4, 'weight_decay': 0.01,
-        'max_epochs': 25, 'patience': 5, 'warmup_steps': 1000,
+        'lr': 3e-4, 'weight_decay': 0.01,
+        'max_epochs': 40, 'patience': 8, 'warmup_steps': 200,
         'lr_schedule': 'cosine', 'grad_clip': 1.0,
         'label_smoothing': 0.1,
         'grad_accumulation_steps': 1, 'use_amp': True,

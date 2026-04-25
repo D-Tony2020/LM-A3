@@ -128,6 +128,25 @@ def build_prompt(query: str, examples: List[Tuple[str, str]],
     return '\n\n'.join(parts)
 
 
+def _supports_system_role(tokenizer) -> bool:
+    """Return True if the tokenizer's chat template renders a 'system' role.
+
+    CodeGemma-7B-it (Gemma-1 architecture) and a few other instruction-tuned
+    chat templates only accept user/assistant roles and raise a Jinja
+    TemplateError on system. Gemma-3-* and most modern templates do support
+    it. Probe once at the start of a run instead of guessing.
+    """
+    try:
+        tokenizer.apply_chat_template(
+            [{'role': 'system', 'content': 'x'},
+             {'role': 'user', 'content': 'y'}],
+            tokenize=False, add_generation_prompt=False,
+        )
+        return True
+    except Exception:
+        return False
+
+
 def run_kshot(tokenizer, model, eval_x: List[str],
               train_x: List[str], train_y: List[str],
               k: int, strategy: str = 'random',
@@ -142,6 +161,7 @@ def run_kshot(tokenizer, model, eval_x: List[str],
     chat-tagged and plain-text responses are handled uniformly.
     """
     sys_msg = system_instruction or DEFAULT_SYSTEM
+    supports_system = _supports_system_role(tokenizer)
 
     raw_outputs: List[str] = []
     extracted: List[str] = []
@@ -149,10 +169,17 @@ def run_kshot(tokenizer, model, eval_x: List[str],
     for sentence in tqdm(eval_x, desc=f'{k}-shot-{strategy}'):
         examples = select_examples(sentence, train_x, train_y, k, strategy, seed=seed)
         user_prompt = build_prompt(sentence, examples, schema=schema)
-        messages = [
-            {'role': 'system', 'content': sys_msg},
-            {'role': 'user', 'content': user_prompt},
-        ]
+        if supports_system:
+            messages = [
+                {'role': 'system', 'content': sys_msg},
+                {'role': 'user', 'content': user_prompt},
+            ]
+        else:
+            # Templates without a system role (e.g. CodeGemma) — prepend
+            # the system text to the user turn so no information is lost.
+            messages = [
+                {'role': 'user', 'content': f'{sys_msg}\n\n{user_prompt}'},
+            ]
         inputs = tokenizer.apply_chat_template(
             messages, add_generation_prompt=True, tokenize=True,
             return_dict=True, return_tensors='pt'
