@@ -1,0 +1,21 @@
+{
+  "config": {
+    "model_type": "t5_ft",
+    "experiment_name": "t5_ft_frozen_encoder_beam4",
+    "num_beams": 4,
+    "max_new_tokens": 256,
+    "source_run": "t5_ft_frozen_encoder",
+    "derived_from_checkpoint": true
+  },
+  "results": {
+    "dev_record_f1": 0.44740859504286495,
+    "dev_record_em": 0.3540772532188841,
+    "dev_sql_em": 0.01072961373390558,
+    "dev_error_rate": 0.20600858369098712,
+    "dev_loss": 0.12706566340144476,
+    "duration_sec": 326.4236571788788,
+    "best_hyperparam": "beam=4",
+    "epochs_trained": 0
+  },
+  "run_id": "t5_ft_frozen_encoder_beam4_20260424_230542"
+}
