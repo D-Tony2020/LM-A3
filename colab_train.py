@@ -203,6 +203,22 @@ T5_CONFIGS = {
         'freeze_encoder': False,
         'experiment_name': 't5_scr_h100',
     },
+
+    # Sprint config: longer T5 ft on H100. bs=64, 20 epochs, lr=3e-4 peak,
+    # label smoothing for the unbalanced-paren regularization story.
+    # Targets dev F1 ≥ 0.55 (vs local baseline 0.5171).
+    't5_ft_h100_long': {
+        'model_type': 't5_ft', 'finetune': True,
+        'lr': 3e-4, 'weight_decay': 0.01,
+        'max_epochs': 20, 'patience': 5, 'warmup_steps': 500,
+        'lr_schedule': 'cosine', 'grad_clip': 1.0,
+        'label_smoothing': 0.1,
+        'grad_accumulation_steps': 1, 'use_amp': True,
+        'batch_size': 64, 'test_batch_size': 64,
+        'max_new_tokens': 256, 'num_beams': 1,
+        'freeze_encoder': False,
+        'experiment_name': 't5_ft_h100_long',
+    },
 }
 
 
@@ -275,6 +291,40 @@ PROMPT_CONFIGS = {
         'k': 3, 'example_selection': 'bm25', 'include_schema': True,
         'quantization': True, 'max_new_tokens': 256, 'seed': 42,
         'experiment_name': 'codegemma7b_k3_bm25_schema_q4',
+    },
+
+    # === Sprint configs (compact schema avoids 8K context overflow) ====
+
+    # CodeGemma 7B with the compact (~4 KB) DDL schema instead of the
+    # raw 23 KB JSON. Same k=3 BM25; expected to lift LLM dev F1 by
+    # 0.03-0.05 because the model can now actually attend to the
+    # examples instead of being truncated mid-schema.
+    'codegemma7b_k3_compact_schema': {
+        'model_type': 'codegemma_7b', 'model_name': 'codegemma-7b',
+        'k': 3, 'example_selection': 'bm25', 'include_schema': True,
+        'compact_schema': True,
+        'quantization': False, 'max_new_tokens': 256, 'seed': 42,
+        'experiment_name': 'codegemma7b_k3_compact_schema',
+    },
+
+    # k=5 with compact schema (only safe to try once schema is compact;
+    # otherwise this would overflow even harder).
+    'codegemma7b_k5_bm25_compact_schema': {
+        'model_type': 'codegemma_7b', 'model_name': 'codegemma-7b',
+        'k': 5, 'example_selection': 'bm25', 'include_schema': True,
+        'compact_schema': True,
+        'quantization': False, 'max_new_tokens': 256, 'seed': 42,
+        'experiment_name': 'codegemma7b_k5_bm25_compact_schema',
+    },
+
+    # Bigger Gemma — 12B at bf16 (~24 GB), comfortably fits H100 80 GB.
+    # Uses compact schema for the same context-window reason.
+    'gemma3_12b_k3_bm25_compact_schema': {
+        'model_type': 'gemma_12b', 'model_name': 'gemma-12b',
+        'k': 3, 'example_selection': 'bm25', 'include_schema': True,
+        'compact_schema': True,
+        'quantization': False, 'max_new_tokens': 256, 'seed': 42,
+        'experiment_name': 'gemma3_12b_k3_bm25_compact_schema',
     },
 }
 
@@ -397,6 +447,12 @@ def run_prompting(config_name: str) -> None:
     schema = None
     if cfg.get('include_schema'):
         schema = read_schema(os.path.join('data', 'flight_database.schema'))
+        if cfg.get('compact_schema'):
+            # Shrink the 23 KB raw JSON to a ~4 KB DDL-style summary so
+            # CodeGemma-7B's 8 K context window doesn't overflow.
+            from tools.compact_schema import compact_schema as _compact
+            schema = _compact(schema)
+            print(f'  schema:  COMPACT (~{len(schema)//1024} KB)')
 
     tokenizer, model = initialize_model_and_tokenizer(
         cfg['model_name'], cfg.get('quantization', False))

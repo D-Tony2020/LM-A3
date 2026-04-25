@@ -35,9 +35,14 @@ PROMPTING_LOGS_DIR = os.path.join(ROOT, 'experiments', 'prompting_logs')
 
 
 DEFAULT_SYSTEM = (
-    'You are an assistant that translates natural language instructions into '
-    'SQLite SQL queries for a flight-booking database. Output only the SQL '
-    'query, with no explanation and no markdown fences.'
+    'You translate natural-language instructions into SQLite queries for a '
+    'flight-booking database. Conventions to follow strictly:\n'
+    '- Always start with SELECT DISTINCT.\n'
+    '- Alias every table with a numeric suffix (flight_1, airport_service_1, etc.).\n'
+    '- Join cities to flights through the airport_service table.\n'
+    '- City names are uppercase string literals (e.g., \'BOSTON\').\n'
+    '- Default year is 1991 unless stated otherwise.\n'
+    'Output only the SQL on a single line — no explanation, no markdown fences.'
 )
 
 

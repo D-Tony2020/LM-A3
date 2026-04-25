@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model_type": "codegemma_7b",
+    "experiment_name": "codegemma7b_k3_bm25_schema_pp",
+    "source_run": "codegemma7b_k3_bm25_schema",
+    "derived_postprocess": "balance_parens"
+  },
+  "results": {
+    "dev_record_f1": 0.6968802907873668,
+    "dev_record_em": 0.6630901287553648,
+    "dev_sql_em": 0.3776824034334764,
+    "dev_error_rate": 0.17381974248927037,
+    "duration_sec": 16.814608335494995,
+    "best_hyperparam": "paren-balance",
+    "epochs_trained": 0
+  },
+  "run_id": "codegemma7b_k3_bm25_schema_pp_20260425_020858"
+}

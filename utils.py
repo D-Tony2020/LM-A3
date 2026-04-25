@@ -126,6 +126,23 @@ def compute_record(query_id, query):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Hard per-query wall-clock cap. Without this, paren-balance
+    # post-processing can turn what was previously a syntactically-broken
+    # query (which SQLite rejects in microseconds) into a syntactically
+    # valid Cartesian product over many tables, which can run for hours.
+    # The thread-pool timeout in `compute_records` does not actually
+    # abort SQLite, only the Python wait — see also Python issue 81620.
+    # set_progress_handler is the only mechanism that stops execution
+    # mid-query, and it is callable from any thread.
+    import time as _time
+    _start = _time.monotonic()
+    _HARD_TIMEOUT_SEC = 5.0
+
+    def _progress_check():
+        return 1 if (_time.monotonic() - _start) > _HARD_TIMEOUT_SEC else 0
+
+    conn.set_progress_handler(_progress_check, 1000)
+
     try:
         cursor.execute(query)
         rec = cursor.fetchall()

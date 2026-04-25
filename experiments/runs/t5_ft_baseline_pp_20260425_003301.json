@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model_type": "t5_ft",
+    "experiment_name": "t5_ft_baseline_pp",
+    "source_run": "t5_ft_baseline",
+    "derived_postprocess": "balance_parens"
+  },
+  "results": {
+    "dev_record_f1": 0.5438123575960683,
+    "dev_record_em": 0.4699570815450644,
+    "dev_sql_em": 0.017167381974248927,
+    "dev_error_rate": 0.27682403433476394,
+    "duration_sec": 120.09991216659546,
+    "best_hyperparam": "paren-balance",
+    "epochs_trained": 0
+  },
+  "run_id": "t5_ft_baseline_pp_20260425_003301"
+}
