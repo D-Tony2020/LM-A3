@@ -1,0 +1,24 @@
+{
+  "config": {
+    "model_type": "codegemma_7b",
+    "model_name": "codegemma-7b",
+    "k": 3,
+    "example_selection": "bm25",
+    "include_schema": true,
+    "quantization": false,
+    "max_new_tokens": 256,
+    "seed": 42,
+    "experiment_name": "codegemma7b_k3_bm25_schema"
+  },
+  "results": {
+    "dev_record_f1": 0.5678037781973857,
+    "dev_record_em": 0.5407725321888412,
+    "dev_sql_em": 0.3776824034334764,
+    "dev_error_rate": 0.3776824034334764,
+    "dev_loss": null,
+    "duration_sec": 2623.6797864437103,
+    "best_hyperparam": "k=3,sel=bm25",
+    "epochs_trained": 0
+  },
+  "run_id": "codegemma7b_k3_bm25_schema_20260425_013916"
+}
