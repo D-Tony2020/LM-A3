@@ -1,0 +1,200 @@
+{
+  "config": {
+    "model_type": "t5_ft",
+    "finetune": true,
+    "lr": 0.0003,
+    "weight_decay": 0.01,
+    "max_epochs": 20,
+    "patience": 5,
+    "warmup_steps": 500,
+    "lr_schedule": "cosine",
+    "grad_clip": 1.0,
+    "label_smoothing": 0.1,
+    "grad_accumulation_steps": 1,
+    "use_amp": true,
+    "batch_size": 64,
+    "test_batch_size": 64,
+    "max_new_tokens": 256,
+    "num_beams": 1,
+    "freeze_encoder": false,
+    "experiment_name": "t5_ft_h100_long",
+    "colab": true
+  },
+  "results": {
+    "dev_loss": 0.10038253289967967,
+    "dev_record_f1": 0.5814385482106337,
+    "dev_record_em": 0.5107296137339056,
+    "dev_sql_em": 0.019313304721030045,
+    "dev_error_rate": 0.2918454935622318,
+    "eval_time_sec": 24.458839654922485,
+    "prediction_path": "/content/LM-A3/results/t5_ft_t5_ft_h100_long_dev.sql",
+    "record_path": "/content/LM-A3/records/t5_ft_t5_ft_h100_long_dev.pkl",
+    "duration_sec": 694.4249866008759,
+    "epochs_trained": 20,
+    "test_prediction_path": "/content/LM-A3/results/t5_ft_t5_ft_h100_long_test.sql",
+    "test_record_path": "/content/LM-A3/records/t5_ft_t5_ft_h100_long_test.pkl",
+    "training_log": [
+      {
+        "epoch": 1,
+        "train_loss": 6.581298052368146,
+        "dev_loss": 3.1507178298885306,
+        "dev_record_f1": 0.11802575048283262,
+        "lr": 4.02e-05,
+        "elapsed_sec": 12.44188141822815
+      },
+      {
+        "epoch": 2,
+        "train_loss": 3.794491196135767,
+        "dev_loss": 0.9609490095974536,
+        "dev_record_f1": 0.11802575048283262,
+        "lr": 8.04e-05,
+        "elapsed_sec": 25.444324254989624
+      },
+      {
+        "epoch": 3,
+        "train_loss": 2.5155552770043084,
+        "dev_loss": 0.4767971720195246,
+        "dev_record_f1": 0.11802575048283262,
+        "lr": 0.00012059999999999999,
+        "elapsed_sec": 58.44820809364319
+      },
+      {
+        "epoch": 4,
+        "train_loss": 2.0932592590883177,
+        "dev_loss": 0.3124397832459884,
+        "dev_record_f1": 0.17778414734297202,
+        "lr": 0.0001608,
+        "elapsed_sec": 82.34866690635681
+      },
+      {
+        "epoch": 5,
+        "train_loss": 1.8857591769694397,
+        "dev_loss": 0.23605647090709167,
+        "dev_record_f1": 0.2317335950033447,
+        "lr": 0.000201,
+        "elapsed_sec": 105.50402092933655
+      },
+      {
+        "epoch": 6,
+        "train_loss": 1.76701142698451,
+        "dev_loss": 0.18234384075753954,
+        "dev_record_f1": 0.3002953210451006,
+        "lr": 0.00024119999999999998,
+        "elapsed_sec": 135.4850504398346
+      },
+      {
+        "epoch": 7,
+        "train_loss": 1.6902997562698185,
+        "dev_loss": 0.1581198461373854,
+        "dev_record_f1": 0.3770774798404385,
+        "lr": 0.00028139999999999996,
+        "elapsed_sec": 176.37908029556274
+      },
+      {
+        "epoch": 8,
+        "train_loss": 1.6382483009520001,
+        "dev_loss": 0.14576966260699142,
+        "dev_record_f1": 0.412140583341534,
+        "lr": 0.0002986424642651902,
+        "elapsed_sec": 210.2100076675415
+      },
+      {
+        "epoch": 9,
+        "train_loss": 1.6008573549985645,
+        "dev_loss": 0.13164300591085665,
+        "dev_record_f1": 0.44251427893158085,
+        "lr": 0.0002890074188588837,
+        "elapsed_sec": 256.43725752830505
+      },
+      {
+        "epoch": 10,
+        "train_loss": 1.5773771169120092,
+        "dev_loss": 0.11930472379515547,
+        "dev_record_f1": 0.5013717153881216,
+        "lr": 0.0002706896669650002,
+        "elapsed_sec": 290.11412477493286
+      },
+      {
+        "epoch": 11,
+        "train_loss": 1.5602802560860634,
+        "dev_loss": 0.1157852394319959,
+        "dev_record_f1": 0.5356419781401123,
+        "lr": 0.00024483337530868644,
+        "elapsed_sec": 331.2622926235199
+      },
+      {
+        "epoch": 12,
+        "train_loss": 1.545507861882502,
+        "dev_loss": 0.11101563038474462,
+        "dev_record_f1": 0.5213814233656161,
+        "lr": 0.0002130535842464348,
+        "elapsed_sec": 370.336669921875
+      },
+      {
+        "epoch": 13,
+        "train_loss": 1.5379203409325002,
+        "dev_loss": 0.10844955446132847,
+        "dev_record_f1": 0.5400889694828247,
+        "lr": 0.00017733532882382213,
+        "elapsed_sec": 407.4318497180939
+      },
+      {
+        "epoch": 14,
+        "train_loss": 1.5282479770088557,
+        "dev_loss": 0.10698397518718779,
+        "dev_record_f1": 0.550758712827923,
+        "lr": 0.00013990964915819404,
+        "elapsed_sec": 442.8053991794586
+      },
+      {
+        "epoch": 15,
+        "train_loss": 1.5240803191225907,
+        "dev_loss": 0.10236213247866223,
+        "dev_record_f1": 0.5634385067239416,
+        "lr": 0.00010311423480815334,
+        "elapsed_sec": 475.63514709472656
+      },
+      {
+        "epoch": 16,
+        "train_loss": 1.519355426123993,
+        "dev_loss": 0.10154285101107269,
+        "dev_record_f1": 0.5647314915928293,
+        "lr": 6.924740758639768e-05,
+        "elapsed_sec": 509.1181387901306
+      },
+      {
+        "epoch": 17,
+        "train_loss": 1.5169250753068684,
+        "dev_loss": 0.10095675510464308,
+        "dev_record_f1": 0.5729246060918503,
+        "lr": 4.042456336780837e-05,
+        "elapsed_sec": 542.0158686637878
+      },
+      {
+        "epoch": 18,
+        "train_loss": 1.5147346890269322,
+        "dev_loss": 0.10082526699630776,
+        "dev_record_f1": 0.5812451660344491,
+        "lr": 1.8446039850485016e-05,
+        "elapsed_sec": 576.32057762146
+      },
+      {
+        "epoch": 19,
+        "train_loss": 1.5141338694187108,
+        "dev_loss": 0.10038253289967967,
+        "dev_record_f1": 0.5814385482106337,
+        "lr": 1.4999999999999999e-05,
+        "elapsed_sec": 608.9001305103302
+      },
+      {
+        "epoch": 20,
+        "train_loss": 1.5133409704547274,
+        "dev_loss": 0.09990550205365283,
+        "dev_record_f1": 0.5786174289859733,
+        "lr": 1.4999999999999999e-05,
+        "elapsed_sec": 641.6116752624512
+      }
+    ]
+  },
+  "run_id": "t5_ft_h100_long_20260425_071449"
+}
