@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model_type": "gemma_12b",
+    "experiment_name": "gemma3_12b_k3_bm25_compact_schema_pp",
+    "source_run": "gemma3_12b_k3_bm25_compact_schema",
+    "derived_postprocess": "balance_parens"
+  },
+  "results": {
+    "dev_record_f1": 0.7408098251680822,
+    "dev_record_em": 0.7017167381974249,
+    "dev_sql_em": 0.48068669527896996,
+    "dev_error_rate": 0.1781115879828326,
+    "duration_sec": 16.171498775482178,
+    "best_hyperparam": "paren-balance",
+    "epochs_trained": 0
+  },
+  "run_id": "gemma3_12b_k3_bm25_compact_schema_pp_20260425_055712"
+}

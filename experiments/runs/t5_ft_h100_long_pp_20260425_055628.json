@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model_type": "t5_ft",
+    "experiment_name": "t5_ft_h100_long_pp",
+    "source_run": "t5_ft_h100_long",
+    "derived_postprocess": "balance_parens"
+  },
+  "results": {
+    "dev_record_f1": 0.6000926392688193,
+    "dev_record_em": 0.5214592274678111,
+    "dev_sql_em": 0.019313304721030045,
+    "dev_error_rate": 0.22532188841201717,
+    "duration_sec": 26.43357563018799,
+    "best_hyperparam": "paren-balance",
+    "epochs_trained": 0
+  },
+  "run_id": "t5_ft_h100_long_pp_20260425_055628"
+}

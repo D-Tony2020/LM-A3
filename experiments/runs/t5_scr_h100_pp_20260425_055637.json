@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model_type": "t5_scr",
+    "experiment_name": "t5_scr_h100_pp",
+    "source_run": "t5_scr_h100",
+    "derived_postprocess": "balance_parens"
+  },
+  "results": {
+    "dev_record_f1": 0.16632622244093315,
+    "dev_record_em": 0.15879828326180256,
+    "dev_sql_em": 0.0,
+    "dev_error_rate": 0.6738197424892703,
+    "duration_sec": 5.313164472579956,
+    "best_hyperparam": "paren-balance",
+    "epochs_trained": 0
+  },
+  "run_id": "t5_scr_h100_pp_20260425_055637"
+}

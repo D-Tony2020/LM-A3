@@ -8,7 +8,13 @@ Hard-dev F1 is a more test-aligned signal: only 11.1% of *test* queries have Jac
 
 | run | overall F1 | hard F1 | easy F1 | hard−overall Δ |
 |---|---:|---:|---:|---:|
+| `gemma_12b/gemma3_12b_k3_bm25_compact_schema_pp` | 0.7408 | **0.7056** | 0.8057 | -0.0352 |
+| `gemma_12b/gemma3_12b_k3_bm25_compact_schema` | 0.7313 | **0.7023** | 0.7847 | -0.0290 |
+| `codegemma_7b/codegemma7b_k3_compact_schema_pp` | 0.7190 | **0.6680** | 0.8128 | -0.0510 |
+| `codegemma_7b/codegemma7b_k3_compact_schema` | 0.7048 | **0.6617** | 0.7842 | -0.0431 |
 | `codegemma_7b/codegemma7b_k3_bm25_schema_pp` | 0.6969 | **0.6507** | 0.7820 | -0.0462 |
+| `t5_ft/t5_ft_h100_long_pp` | 0.6001 | **0.5554** | 0.6823 | -0.0447 |
+| `t5_ft/t5_ft_h100_long` | 0.5814 | **0.5337** | 0.6694 | -0.0478 |
 | `codegemma_7b/codegemma7b_k3_bm25_schema` | 0.5678 | **0.5144** | 0.6661 | -0.0534 |
 | `t5_ft/t5_ft_baseline_pp` | 0.5438 | **0.5120** | 0.6025 | -0.0319 |
 | `t5_ft/t5_ft_baseline` | 0.5171 | **0.4757** | 0.5933 | -0.0414 |
@@ -18,7 +24,8 @@ Hard-dev F1 is a more test-aligned signal: only 11.1% of *test* queries have Jac
 | `t5_ft/t5_ft_frozen_encoder_beam4` | 0.4474 | **0.3959** | 0.5423 | -0.0515 |
 | `gemma_1b/gemma1b_k3_random` | 0.1968 | **0.2164** | 0.1608 | +0.0196 |
 | `gemma_1b/gemma1b_k1_random` | 0.1779 | **0.2064** | 0.1256 | +0.0284 |
-| `t5_scr/t5_scr_h100` | 0.1180 | **0.1424** | 0.0732 | +0.0244 |
+| `t5_scr/t5_scr_h100` | 0.1663 | **0.1660** | 0.1670 | -0.0004 |
+| `t5_scr/t5_scr_h100_pp` | 0.1663 | **0.1660** | 0.1670 | -0.0004 |
 | `gemma_1b/gemma1b_k0` | 0.1180 | **0.1424** | 0.0732 | +0.0244 |
 
 > A large negative Δ means the run benefits disproportionately from BM25 retrieval finding near-duplicates and is therefore at risk of over-estimating test F1.
