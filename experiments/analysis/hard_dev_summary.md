@@ -14,6 +14,7 @@ Hard-dev F1 is a more test-aligned signal: only 11.1% of *test* queries have Jac
 | `t5_ft/t5_ft_baseline` | 0.5171 | **0.4757** | 0.5933 | -0.0414 |
 | `t5_ft/t5_ft_baseline_beam4` | 0.5135 | **0.4690** | 0.5956 | -0.0446 |
 | `gemma_1b/gemma1b_k3_bm25` | 0.4565 | **0.4055** | 0.5504 | -0.0510 |
+| `gemma_1b/gemma1b_k3_bm25_schema` | 0.4648 | **0.3977** | 0.5884 | -0.0671 |
 | `t5_ft/t5_ft_frozen_encoder_beam4` | 0.4474 | **0.3959** | 0.5423 | -0.0515 |
 | `gemma_1b/gemma1b_k3_random` | 0.1968 | **0.2164** | 0.1608 | +0.0196 |
 | `gemma_1b/gemma1b_k1_random` | 0.1779 | **0.2064** | 0.1256 | +0.0284 |
