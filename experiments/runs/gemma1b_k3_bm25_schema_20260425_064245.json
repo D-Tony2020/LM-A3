@@ -1,0 +1,24 @@
+{
+  "config": {
+    "model_type": "gemma_1b",
+    "model_name": "gemma-1b",
+    "k": 3,
+    "example_selection": "bm25",
+    "include_schema": true,
+    "quantization": false,
+    "max_new_tokens": 256,
+    "seed": 42,
+    "experiment_name": "gemma1b_k3_bm25_schema"
+  },
+  "results": {
+    "dev_record_f1": 0.46483679422988106,
+    "dev_record_em": 0.4291845493562232,
+    "dev_sql_em": 0.15021459227467812,
+    "dev_error_rate": 0.38197424892703863,
+    "dev_loss": null,
+    "duration_sec": 3711.924789905548,
+    "best_hyperparam": "k=3,sel=bm25",
+    "epochs_trained": 0
+  },
+  "run_id": "gemma1b_k3_bm25_schema_20260425_064245"
+}
