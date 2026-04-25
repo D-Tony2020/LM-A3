@@ -1,0 +1,24 @@
+{
+  "config": {
+    "model_type": "gemma_1b",
+    "model_name": "gemma-1b",
+    "k": 0,
+    "example_selection": "random",
+    "include_schema": false,
+    "quantization": false,
+    "max_new_tokens": 256,
+    "seed": 42,
+    "experiment_name": "gemma1b_k0"
+  },
+  "results": {
+    "dev_record_f1": 0.11802575048283262,
+    "dev_record_em": 0.11802575107296137,
+    "dev_sql_em": 0.0,
+    "dev_error_rate": 0.9914163090128756,
+    "dev_loss": null,
+    "duration_sec": 595.0439274311066,
+    "best_hyperparam": "k=0,sel=random",
+    "epochs_trained": 0
+  },
+  "run_id": "gemma1b_k0_20260425_025641"
+}
