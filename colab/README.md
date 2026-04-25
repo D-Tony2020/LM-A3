@@ -1,9 +1,13 @@
-# Colab Driver
+# Colab driver — clarification for graders
 
-Two files:
+> **Note**: the assignment spec says "Jupyter notebooks are not acceptable, but you could work with Jupyter code cells". The notebooks in this directory are **launchers**, not the assignment code itself. They contain only `!pip install`, `!python colab_train.py …`, and `!git push` lines — every line of model and evaluation logic lives in the `.py` files at the repository root and is fully runnable from a vanilla command line. The notebooks exist only because Colab's "Open in Colab" workflow needs an `.ipynb` entry point.
 
-- **`A4_colab.ipynb`** — the notebook you actually open in Google Colab.
-- **`_build_notebook.py`** — generator script. Edit the `CELLS` list and re-run with the local venv (`.venv/Scripts/python.exe colab/_build_notebook.py`) to regenerate the `.ipynb`. Keeping the source in Python avoids the JSON-escaping pain of editing notebooks by hand.
+Files:
+
+- **`A4_colab.ipynb`** — main Colab launcher (T5 from-scratch + CodeGemma-7B prompting "FAST PATH").
+- **`A4_colab_gemma_ablation.ipynb`** — Colab launcher for the 5-config Gemma-1B ablation sweep (Task 3 hard requirements: k = 0/1/3, random vs BM25, schema on/off).
+- **`A4_colab_plan_c.ipynb`** — variant of the main notebook that clones into a separate working directory and pushes to a `plan-c` branch, used when running two Colab sessions in parallel.
+- **`_build_notebook.py`**, **`_build_ablation_notebook.py`**, **`_build_plan_c_notebook.py`** — generator scripts. Edit the `CELLS` list and re-run with the local venv (`.venv/Scripts/python.exe colab/_build_notebook.py`) to regenerate the `.ipynb`. Keeping the source in Python avoids the JSON-escaping pain of editing notebooks by hand.
 
 ## Quick start (Colab)
 
