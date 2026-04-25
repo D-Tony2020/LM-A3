@@ -12,6 +12,26 @@ Paste the relevant tables into the Overleaf report template; do not edit this fi
 | Run | LR | Epochs | Effective batch | Schedule | Label smoothing | Other |
 |---|---:|---:|---:|---|---:|---|
 | codegemma7b_k3_bm25_schema | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=bm25, schema=True |
+| codegemma7b_k3_bm25_schema_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
+| codegemma7b_k3_compact_schema | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=bm25, schema=True |
+| codegemma7b_k3_compact_schema_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
+
+### `gemma_12b`
+
+| Run | LR | Epochs | Effective batch | Schedule | Label smoothing | Other |
+|---|---:|---:|---:|---|---:|---|
+| gemma3_12b_k3_bm25_compact_schema | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=bm25, schema=True |
+| gemma3_12b_k3_bm25_compact_schema_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
+
+### `gemma_1b`
+
+| Run | LR | Epochs | Effective batch | Schedule | Label smoothing | Other |
+|---|---:|---:|---:|---|---:|---|
+| gemma1b_k0 | — | — | ?×1 | ? (warmup ?) | 0 | k=0, sel=random, schema=False |
+| gemma1b_k1_random | — | — | ?×1 | ? (warmup ?) | 0 | k=1, sel=random, schema=False |
+| gemma1b_k3_random | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=random, schema=False |
+| gemma1b_k3_bm25 | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=bm25, schema=False |
+| gemma1b_k3_bm25_schema | — | — | ?×1 | ? (warmup ?) | 0 | k=3, sel=bm25, schema=True |
 
 ### `t5_ft`
 
@@ -20,6 +40,9 @@ Paste the relevant tables into the Overleaf report template; do not edit this fi
 | t5_ft_baseline | 0.0001 | 10 | 16 | cosine (warmup 500) | 0 | fp32, grad ckpt |
 | t5_ft_baseline_beam4 | — | — | ?×1 | ? (warmup ?) | 0 | beam=4 |
 | t5_ft_frozen_encoder_beam4 | — | — | ?×1 | ? (warmup ?) | 0 | beam=4 |
+| t5_ft_baseline_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
+| t5_ft_h100_long | 0.0003 | 20 | 64 | cosine (warmup 500) | 0.1 | — |
+| t5_ft_h100_long_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
 
 ### `t5_scr`
 
@@ -27,6 +50,8 @@ Paste the relevant tables into the Overleaf report template; do not edit this fi
 |---|---:|---:|---:|---|---:|---|
 | t5_scr_h100 | 0.0005 | 25 | 128 | cosine (warmup 1000) | 0.1 | — |
 | t5_scr_h100 | 0.0005 | 25 | 128 | cosine (warmup 1000) | 0.1 | — |
+| t5_scr_h100 | 0.0003 | 40 | 128 | cosine (warmup 200) | 0.1 | — |
+| t5_scr_h100_pp | — | — | ?×1 | ? (warmup ?) | 0 | — |
 
 ## Dev set results — every run
 
@@ -38,14 +63,31 @@ Paste the relevant tables into the Overleaf report template; do not edit this fi
 | t5_scr | t5_scr_h100 | 0.1180 | 0.1180 | 0.0000 | 100.0% | 6 | 125 |
 | codegemma_7b | codegemma7b_k3_bm25_schema | 0.5678 | 0.5408 | 0.3777 | 37.8% | 0 | 2624 |
 | t5_ft | t5_ft_frozen_encoder_beam4 | 0.4474 | 0.3541 | 0.0107 | 20.6% | 0 | 326 |
+| gemma_1b | gemma1b_k0 | 0.1180 | 0.1180 | 0.0000 | 99.1% | 0 | 595 |
+| gemma_1b | gemma1b_k1_random | 0.1779 | 0.1373 | 0.0043 | 66.1% | 0 | 2573 |
+| t5_ft | t5_ft_baseline_pp | 0.5438 | 0.4700 | 0.0172 | 27.7% | 0 | 120 |
+| codegemma_7b | codegemma7b_k3_bm25_schema_pp | 0.6969 | 0.6631 | 0.3777 | 17.4% | 0 | 17 |
+| gemma_1b | gemma1b_k3_random | 0.1968 | 0.1674 | 0.0236 | 67.6% | 0 | 3472 |
+| gemma_1b | gemma1b_k3_bm25 | 0.4565 | 0.4227 | 0.1845 | 41.6% | 0 | 3793 |
+| gemma_1b | gemma1b_k3_bm25_schema | 0.4648 | 0.4292 | 0.1502 | 38.2% | 0 | 3712 |
+| t5_scr | t5_scr_h100 | 0.1663 | 0.1588 | 0.0000 | 79.6% | 18 | 372 |
+| t5_ft | t5_ft_h100_long | 0.5814 | 0.5107 | 0.0193 | 29.2% | 20 | 694 |
+| codegemma_7b | codegemma7b_k3_compact_schema | 0.7048 | 0.6824 | 0.4614 | 22.7% | 0 | 2317 |
+| gemma_12b | gemma3_12b_k3_bm25_compact_schema | 0.7313 | 0.6931 | 0.4807 | 20.6% | 0 | 6659 |
+| t5_ft | t5_ft_h100_long_pp | 0.6001 | 0.5215 | 0.0193 | 22.5% | 0 | 26 |
+| t5_scr | t5_scr_h100_pp | 0.1663 | 0.1588 | 0.0000 | 67.4% | 0 | 5 |
+| codegemma_7b | codegemma7b_k3_compact_schema_pp | 0.7190 | 0.6931 | 0.4614 | 19.1% | 0 | 12 |
+| gemma_12b | gemma3_12b_k3_bm25_compact_schema_pp | 0.7408 | 0.7017 | 0.4807 | 17.8% | 0 | 16 |
 
 ## Best run per track (dev F1)
 
 | Track | Best experiment | Dev F1 | Dev EM | SQL EM | Err rate |
 |---|---|---:|---:|---:|---:|
-| codegemma_7b | codegemma7b_k3_bm25_schema | 0.5678 | 0.5408 | 0.3777 | 37.8% |
-| t5_ft | t5_ft_baseline | 0.5171 | 0.4528 | 0.0172 | 38.6% |
-| t5_scr | t5_scr_h100 | 0.1180 | 0.1180 | 0.0000 | 100.0% |
+| codegemma_7b | codegemma7b_k3_compact_schema_pp | 0.7190 | 0.6931 | 0.4614 | 19.1% |
+| gemma_12b | gemma3_12b_k3_bm25_compact_schema_pp | 0.7408 | 0.7017 | 0.4807 | 17.8% |
+| gemma_1b | gemma1b_k3_bm25_schema | 0.4648 | 0.4292 | 0.1502 | 38.2% |
+| t5_ft | t5_ft_h100_long_pp | 0.6001 | 0.5215 | 0.0193 | 22.5% |
+| t5_scr | t5_scr_h100 | 0.1663 | 0.1588 | 0.0000 | 79.6% |
 
 ## Task 1 ablation (T5 finetune)
 
@@ -54,16 +96,39 @@ Paste the relevant tables into the Overleaf report template; do not edit this fi
 | t5_ft_baseline | greedy | False | 0.5171 | 0.4528 | 38.6% |
 | t5_ft_baseline_beam4 | beam=4 | False | 0.5135 | 0.4356 | 34.1% |
 | t5_ft_frozen_encoder_beam4 | beam=4 | False | 0.4474 | 0.3541 | 20.6% |
+| t5_ft_baseline_pp | greedy | False | 0.5438 | 0.4700 | 27.7% |
+| t5_ft_h100_long | greedy | False | 0.5814 | 0.5107 | 29.2% |
+| t5_ft_h100_long_pp | greedy | False | 0.6001 | 0.5215 | 22.5% |
 
 ## Task 3 ablation (Gemma-1B)
 
-_no rows yet_
+| Variant | k | Selection | Schema | Dev F1 | Dev EM | Err rate |
+|---|---:|---|---|---:|---:|---:|
+| gemma1b_k0 | 0 | random | False | 0.1180 | 0.1180 | 99.1% |
+| gemma1b_k1_random | 1 | random | False | 0.1779 | 0.1373 | 66.1% |
+| gemma1b_k3_random | 3 | random | False | 0.1968 | 0.1674 | 67.6% |
+| gemma1b_k3_bm25 | 3 | bm25 | False | 0.4565 | 0.4227 | 41.6% |
+| gemma1b_k3_bm25_schema | 3 | bm25 | True | 0.4648 | 0.4292 | 38.2% |
+
+### k=3 random vs BM25 (selection method)
+
+| Variant | Dev F1 | Δ vs left |
+|---|---:|---:|
+| gemma1b_k3_random | 0.1968 | — |
+| gemma1b_k3_bm25 | 0.4565 | +0.2597 |
+
+### k=3 BM25 — schema on vs off (prompt component)
+
+| Variant | Dev F1 | Δ vs left |
+|---|---:|---:|
+| gemma1b_k3_bm25 | 0.4565 | — |
+| gemma1b_k3_bm25_schema | 0.4648 | +0.0083 |
 
 ## Best LLM prompt
 
-- Best LLM run: **codegemma7b_k3_bm25_schema** (dev F1 = 0.5678)
-- Model: `codegemma-7b`
-- k = 3, selection = `bm25`, schema = True
+- Best LLM run: **gemma3_12b_k3_bm25_compact_schema_pp** (dev F1 = 0.7408)
+- Model: `None`
+- k = None, selection = `None`, schema = None
 
 ### System instruction
 
@@ -94,7 +159,21 @@ SQL:
 Per-run error tables in `experiments/analysis/`:
 
 - [error_categories_codegemma_7b_codegemma7b_k3_bm25_schema.md](error_categories_codegemma_7b_codegemma7b_k3_bm25_schema.md)
+- [error_categories_codegemma_7b_codegemma7b_k3_bm25_schema_pp.md](error_categories_codegemma_7b_codegemma7b_k3_bm25_schema_pp.md)
+- [error_categories_codegemma_7b_codegemma7b_k3_compact_schema.md](error_categories_codegemma_7b_codegemma7b_k3_compact_schema.md)
+- [error_categories_codegemma_7b_codegemma7b_k3_compact_schema_pp.md](error_categories_codegemma_7b_codegemma7b_k3_compact_schema_pp.md)
+- [error_categories_gemma_12b_gemma3_12b_k3_bm25_compact_schema.md](error_categories_gemma_12b_gemma3_12b_k3_bm25_compact_schema.md)
+- [error_categories_gemma_12b_gemma3_12b_k3_bm25_compact_schema_pp.md](error_categories_gemma_12b_gemma3_12b_k3_bm25_compact_schema_pp.md)
+- [error_categories_gemma_1b_gemma1b_k0.md](error_categories_gemma_1b_gemma1b_k0.md)
+- [error_categories_gemma_1b_gemma1b_k1_random.md](error_categories_gemma_1b_gemma1b_k1_random.md)
+- [error_categories_gemma_1b_gemma1b_k3_bm25.md](error_categories_gemma_1b_gemma1b_k3_bm25.md)
+- [error_categories_gemma_1b_gemma1b_k3_bm25_schema.md](error_categories_gemma_1b_gemma1b_k3_bm25_schema.md)
+- [error_categories_gemma_1b_gemma1b_k3_random.md](error_categories_gemma_1b_gemma1b_k3_random.md)
 - [error_categories_t5_ft_t5_ft_baseline.md](error_categories_t5_ft_t5_ft_baseline.md)
 - [error_categories_t5_ft_t5_ft_baseline_beam4.md](error_categories_t5_ft_t5_ft_baseline_beam4.md)
+- [error_categories_t5_ft_t5_ft_baseline_pp.md](error_categories_t5_ft_t5_ft_baseline_pp.md)
 - [error_categories_t5_ft_t5_ft_frozen_encoder_beam4.md](error_categories_t5_ft_t5_ft_frozen_encoder_beam4.md)
+- [error_categories_t5_ft_t5_ft_h100_long.md](error_categories_t5_ft_t5_ft_h100_long.md)
+- [error_categories_t5_ft_t5_ft_h100_long_pp.md](error_categories_t5_ft_t5_ft_h100_long_pp.md)
 - [error_categories_t5_scr_t5_scr_h100.md](error_categories_t5_scr_t5_scr_h100.md)
+- [error_categories_t5_scr_t5_scr_h100_pp.md](error_categories_t5_scr_t5_scr_h100_pp.md)
